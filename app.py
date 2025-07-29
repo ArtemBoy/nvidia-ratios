@@ -9,8 +9,12 @@ def home():
 
 @app.route('/nvidia_ratios_csv')
 def get_csv():
-    response = requests.get("https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/ratios.csv")
-    if response.status_code == 200:
-        return Response(response.content, mimetype='text/csv')
-    else:
-        return Response(f"Failed to fetch CSV: {response.status_code}", status=502)
+    try:
+        url = "https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/ratios.csv"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return Response(response.content, mimetype='text/csv')
+        else:
+            return f"Error downloading CSV: status {response.status_code}"
+    except Exception as e:
+        return f"Exception occurred: {str(e)}"
