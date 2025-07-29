@@ -26,8 +26,8 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
           DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
+        working-directory: ${{ github.workspace }}
         run: |
           echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > creds.json
-          cd $GITHUB_WORKSPACE
           python upload_to_drive.py
 
