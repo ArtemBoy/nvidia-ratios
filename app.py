@@ -17,6 +17,3 @@ def nvidia_ratios_csv():
         return Response(response.content, mimetype='text/csv')
     else:
         return f"Failed to fetch CSV. Status code: {response.status_code}", 500
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
