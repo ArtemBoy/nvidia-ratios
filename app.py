@@ -26,15 +26,26 @@ def get_ratios():
         "Revenues": "Revenue",
         "NetIncomeLoss": "Net Income"
     }
-    values = {label: get_latest_value(fetch_concept(CIK, code)) for code, label in concepts.items()}
-    try:
-        ratios = {
-            "Debt-to-Equity": values["Total Liabilities"] / values["Shareholders' Equity"],
-            "Net Profit Margin": values["Net Income"] / values["Revenue"],
-            "Return on Assets": values["Net Income"] / values["Total Assets"]
-        }
-    except:
-        ratios = {"error": "Missing data"}
+
+    values = {}
+    for code, label in concepts.items():
+        val = get_latest_value(fetch_concept(CIK, code))
+        values[label] = val
+        print(f"{label}: {val}")  # log the raw values
+
+    ratios = {}
+    if values["Total Liabilities"] and values["Shareholders' Equity"]:
+        ratios["Debt-to-Equity"] = values["Total Liabilities"] / values["Shareholders' Equity"]
+
+    if values["Net Income"] and values["Revenue"]:
+        ratios["Net Profit Margin"] = values["Net Income"] / values["Revenue"]
+
+    if values["Net Income"] and values["Total Assets"]:
+        ratios["Return on Assets"] = values["Net Income"] / values["Total Assets"]
+
+    if not ratios:
+        return jsonify({"error": "Missing data"})
+
     return jsonify(ratios)
 
 if __name__ == "__main__":
