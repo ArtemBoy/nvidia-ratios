@@ -1,6 +1,8 @@
 services:
-  - type: web
-    name: nvidia-ratios
+  - type: worker
+    name: gdrive-csv-uploader
     env: python
-    buildCommand: ""
-    startCommand: gunicorn app:app
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python upload_to_drive.py
+    schedule: "@daily"
