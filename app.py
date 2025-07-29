@@ -1,44 +1,47 @@
-import requests
+import os
 import io
+import requests
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
-# CONFIG
+# === CONFIGURATION ===
 CSV_URL = "https://nvidia-ratios.onrender.com/nvidia_ratios_csv"
-DRIVE_FOLDER_ID = "1-8gz7x9fQwjLCdMBPorczwhPwcm_-vJx"
-SERVICE_ACCOUNT_FILE = "/etc/secrets/ratios-csv-00fb047aabb0.json"  # secret file path in Render
+SERVICE_ACCOUNT_FILE = "creds.json"  # created on-the-fly in GitHub Actions
+DRIVE_FOLDER_ID = os.environ["DRIVE_FOLDER_ID"]
 
-# Download CSV
+# === Step 1: Download CSV from Flask API ===
 response = requests.get(CSV_URL)
 if response.status_code != 200:
     raise Exception(f"Failed to download CSV: {response.status_code}")
 csv_data = response.content
 
-# Authenticate
+# === Step 2: Authenticate with Google Drive API ===
 credentials = service_account.Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE,
     scopes=["https://www.googleapis.com/auth/drive"]
 )
 drive_service = build("drive", "v3", credentials=credentials)
 
-# Upload to Google Drive
+# === Step 3: Prepare metadata and upload ===
 file_name = "nvidia_ratios.csv"
-query = f"name='{file_name}' and '{DRIVE_FOLDER_ID}' in parents and trashed=false"
-results = drive_service.files().list(q=query, spaces="drive", fields="files(id)").execute()
-files = results.get("files", [])
-
-media = MediaIoBaseUpload(io.BytesIO(csv_data), mimetype="text/csv", resumable=True)
-metadata = {
+file_metadata = {
     "name": file_name,
     "parents": [DRIVE_FOLDER_ID],
     "mimeType": "application/vnd.google-apps.spreadsheet"
 }
+media = MediaIoBaseUpload(io.BytesIO(csv_data), mimetype="text/csv", resumable=True)
 
+# === Step 4: Check for existing file ===
+query = f"name='{file_name}' and '{DRIVE_FOLDER_ID}' in parents and trashed=false"
+results = drive_service.files().list(q=query, spaces="drive", fields="files(id)").execute()
+files = results.get("files", [])
+
+# === Step 5: Upload or update ===
 if files:
     file_id = files[0]["id"]
     drive_service.files().update(fileId=file_id, media_body=media).execute()
-    print("✅ Updated existing file on Google Drive.")
+    print(f"✅ Updated existing file: {file_name}")
 else:
-    drive_service.files().create(body=metadata, media_body=media, fields="id").execute()
-    print("✅ Uploaded new file to Google Drive.")
+    drive_service.files().create(body=file_metadata, media_body=media, fields="id").execute()
+    print(f"✅ Uploaded new file: {file_name}")
