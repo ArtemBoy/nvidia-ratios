@@ -1,4 +1,6 @@
 google-api-python-client
 google-auth
 google-auth-oauthlib
-requests
+Flask==2.3.3
+requests==2.31.0
+
