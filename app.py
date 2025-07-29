@@ -3,8 +3,6 @@ import requests
 
 app = Flask(__name__)
 
-CSV_URL = "https://nvidia-ratios.onrender.com/nvidia_ratios_csv"  # Update if needed
-
 @app.route('/')
 def home():
     return '<h1>Nvidia Ratios Uploader is Running</h1>'
