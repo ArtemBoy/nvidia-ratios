@@ -3,17 +3,16 @@ import requests
 
 app = Flask(__name__)
 
+CSV_URL = "https://nvidia-ratios.onrender.com/nvidia_ratios_csv"  # Update if needed
+
 @app.route('/')
 def home():
-    return 'Nvidia Ratios CSV Endpoint - /nvidia_ratios_csv'
+    return '<h1>Nvidia Ratios Uploader is Running</h1>'
 
 @app.route('/nvidia_ratios_csv')
-def nvidia_ratios_csv():
-    # Replace with your actual data source if needed
-    csv_url = 'https://example.com/path/to/nvidia_ratios.csv'
-
-    response = requests.get(csv_url)
+def get_csv():
+    response = requests.get("https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/ratios.csv")
     if response.status_code == 200:
         return Response(response.content, mimetype='text/csv')
     else:
-        return f"Failed to fetch CSV. Status code: {response.status_code}", 500
+        return Response(f"Failed to fetch CSV: {response.status_code}", status=502)
