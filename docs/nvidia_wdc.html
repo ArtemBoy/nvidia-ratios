@@ -11,15 +11,18 @@
   <script>
     (function () {
       const connector = tableau.makeConnector();
+      let sanitizedHeaders = [];
 
       connector.getSchema = function (schemaCallback) {
         fetch("https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv")
           .then(response => response.text())
           .then(text => {
             const lines = text.split("\n").filter(line => line.trim() !== "");
-            const headers = lines[0].split(",");
-            const cols = headers.map(col => ({
-              id: col.trim().replace(/\W/g, "_"),  // sanitize for Tableau
+            const rawHeaders = lines[0].split(",");
+            sanitizedHeaders = rawHeaders.map(h => h.trim().replace(/[^\w]/g, "_"));
+
+            const cols = sanitizedHeaders.map(col => ({
+              id: col,
               dataType: tableau.dataTypeEnum.string
             }));
 
@@ -37,12 +40,14 @@
           .then(response => response.text())
           .then(text => {
             const lines = text.split("\n").filter(line => line.trim() !== "");
-            const headers = lines[0].split(",");
+            const rawHeaders = lines[0].split(",");
+
             const data = lines.slice(1).map(line => {
               const values = line.split(",");
               const row = {};
-              headers.forEach((header, i) => {
-                row[header.trim().replace(/\W/g, "_")] = values[i]?.trim();
+              rawHeaders.forEach((header, i) => {
+                const cleanHeader = header.trim().replace(/[^\w]/g, "_");
+                row[cleanHeader] = values[i]?.trim();
               });
               return row;
             });
