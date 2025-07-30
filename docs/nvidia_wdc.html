@@ -5,7 +5,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tableauwdc/2.3.0/tableauwdc.min.js"></script>
 </head>
 <body>
-  <h2>Loading Nvidia Full Financials Data...</h2>
+  <h2>Click the button to load Nvidia Full Financials Data</h2>
+  <button id="loadButton">Load Data</button>
 
   <script>
     (function () {
@@ -18,19 +19,17 @@
             const lines = text.split("\n").filter(line => line.trim() !== "");
             const headers = lines[0].split(",");
             const cols = headers.map(col => ({
-              id: col.trim().replace(/\W/g, "_"), // clean header names
+              id: col.trim().replace(/\W/g, "_"),  // sanitize for Tableau
               dataType: tableau.dataTypeEnum.string
             }));
 
-            const schema = {
+            schemaCallback([{
               id: "nvidia_full_data",
               alias: "Nvidia Full Financials",
               columns: cols
-            };
-
-            schemaCallback([schema]);
+            }]);
           })
-          .catch(error => tableau.abortWithError("Schema fetch error: " + error));
+          .catch(error => tableau.abortWithError("Schema load error: " + error));
       };
 
       connector.getData = function (table, doneCallback) {
@@ -42,8 +41,8 @@
             const data = lines.slice(1).map(line => {
               const values = line.split(",");
               const row = {};
-              headers.forEach((header, index) => {
-                row[header.trim().replace(/\W/g, "_")] = values[index]?.trim();
+              headers.forEach((header, i) => {
+                row[header.trim().replace(/\W/g, "_")] = values[i]?.trim();
               });
               return row;
             });
@@ -56,10 +55,10 @@
 
       tableau.registerConnector(connector);
 
-      window.onload = function () {
+      document.getElementById("loadButton").addEventListener("click", function () {
         tableau.connectionName = "Nvidia Full Financials Data";
         tableau.submit();
-      };
+      });
     })();
   </script>
 </body>
