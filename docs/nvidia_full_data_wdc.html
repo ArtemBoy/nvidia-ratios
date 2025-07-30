@@ -1,70 +1,42 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Nvidia Full Financials Data WDC</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tableauwdc/2.3.0/tableauwdc.min.js"></script>
-</head>
-<body>
-  <h2>Click the button to load Nvidia Full Financials Data</h2>
-  <button id="loadButton">Load Data</button>
+  <head>
+    <title>Nvidia Full Financials Data WDC</title>
+    <script src="https://connectors.tableau.com/libs/tableauwdc/2.3.0/tableauwdc.min.js"></script>
+  </head>
+  <body>
+    <h2>Click the button to load Nvidia Full Financials Data</h2>
+    <button id="loadButton">Load Data</button>
 
-  <script>
-    (function () {
-      const connector = tableau.makeConnector();
-      let sanitizedHeaders = [];
+    <script>
+      (function () {
+        const connector = tableau.makeConnector();
 
-      connector.getSchema = function (schemaCallback) {
-        fetch("https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv")
-          .then(response => response.text())
-          .then(text => {
-            const lines = text.split("\n").filter(line => line.trim() !== "");
-            const rawHeaders = lines[0].split(",");
-            sanitizedHeaders = rawHeaders.map(h => h.trim().replace(/[^\w]/g, "_"));
-
-            const cols = sanitizedHeaders.map(col => ({
-              id: col,
-              dataType: tableau.dataTypeEnum.string
-            }));
-
-            schemaCallback([{
-              id: "nvidia_full_data",
-              alias: "Nvidia Full Financials",
-              columns: cols
-            }]);
-          })
-          .catch(error => tableau.abortWithError("Schema load error: " + error));
-      };
-
-      connector.getData = function (table, doneCallback) {
-        fetch("https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv")
-          .then(response => response.text())
-          .then(text => {
-            const lines = text.split("\n").filter(line => line.trim() !== "");
-            const rawHeaders = lines[0].split(",");
-
-            const data = lines.slice(1).map(line => {
-              const values = line.split(",");
-              const row = {};
-              rawHeaders.forEach((header, i) => {
-                const cleanHeader = header.trim().replace(/[^\w]/g, "_");
-                row[cleanHeader] = values[i]?.trim();
-              });
-              return row;
-            });
-
-            table.appendRows(data);
-            doneCallback();
-          })
-          .catch(error => tableau.abortWithError("Data fetch error: " + error));
-      };
-
-      tableau.registerConnector(connector);
-
-      document.getElementById("loadButton").addEventListener("click", function () {
-        tableau.connectionName = "Nvidia Full Financials Data";
-        tableau.submit();
-      });
-    })();
-  </script>
-</body>
-</html>
+        connector.getSchema = function (schemaCallback) {
+          const cols = [
+            { id: "date", dataType: tableau.dataTypeEnum.string },
+            { id: "total_revenue", dataType: tableau.dataTypeEnum.float },
+            { id: "cost_of_revenue", dataType: tableau.dataTypeEnum.float },
+            { id: "gross_profit", dataType: tableau.dataTypeEnum.float },
+            { id: "operating_income", dataType: tableau.dataTypeEnum.float },
+            { id: "net_income", dataType: tableau.dataTypeEnum.float },
+            { id: "total_assets", dataType: tableau.dataTypeEnum.float },
+            { id: "total_liabilities", dataType: tableau.dataTypeEnum.float },
+            { id: "shareholder_equity", dataType: tableau.dataTypeEnum.float },
+            { id: "cash_and_cash_equivalents", dataType: tableau.dataTypeEnum.float },
+            { id: "short_term_investments", dataType: tableau.dataTypeEnum.float },
+            { id: "total_current_assets", dataType: tableau.dataTypeEnum.float },
+            { id: "total_current_liabilities", dataType: tableau.dataTypeEnum.float },
+            { id: "long_term_debt", dataType: tableau.dataTypeEnum.float },
+            { id: "net_cash_from_operating_activities", dataType: tableau.dataTypeEnum.float },
+            { id: "net_cash_used_for_investing_activities", dataType: tableau.dataTypeEnum.float },
+            { id: "net_cash_used_provided_by_financing_activities", dataType: tableau.dataTypeEnum.float },
+            { id: "capital_expenditures", dataType: tableau.dataTypeEnum.float },
+            { id: "free_cash_flow", dataType: tableau.dataTypeEnum.float },
+            { id: "dividends_paid", dataType: tableau.dataTypeEnum.float },
+            { id: "common_stock_issued", dataType: tableau.dataTypeEnum.float },
+            { id: "common_stock_repurchased", dataType: tableau.dataTypeEnum.float },
+            { id: "eps_basic", dataType: tableau.dataTypeEnum.float },
+            { id: "eps_diluted", dataType: tableau.dataTypeEnum.float },
+            { id: "weighted_average_shares_outstanding_basic", dataType: tableau.dataTypeEnum.float },
+            { id: "weig
