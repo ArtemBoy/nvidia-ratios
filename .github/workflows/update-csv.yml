@@ -1,0 +1,25 @@
+name: Update Nvidia Ratios CSV Daily
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # Every day at 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  update-csv:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Download latest CSV
+        run: |
+          curl -o data/nvidia_ratios.csv https://nvidia-ratios.onrender.com/nvidia_ratios_csv
+
+      - name: Commit & Push CSV
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data/nvidia_ratios.csv
+          git commit -m "Auto-update CSV [skip ci]" || echo "No changes to commit"
+          git push
