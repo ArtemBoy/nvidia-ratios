@@ -1,65 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Nvidia Full Financials WDC</title>
-  <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
+  <title>Nvidia Full Financials Data WDC</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tableauwdc/2.3.0/tableauwdc.min.js"></script>
 </head>
 <body>
-  <h2>Click "Connect" to load Nvidia financial data</h2>
-  <button id="submitButton">Connect</button>
+  <h2>Loading Nvidia Full Financials Data...</h2>
 
   <script>
     (function () {
-      var myConnector = tableau.makeConnector();
+      const connector = tableau.makeConnector();
 
-      myConnector.getSchema = function (schemaCallback) {
+      connector.getSchema = function (schemaCallback) {
         fetch("https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv")
           .then(response => response.text())
           .then(text => {
-            const lines = text.split("\n").filter(Boolean);
-            const headers = lines[0].split(",").map(h => h.trim());
-            const cols = headers.map(h => ({
-              id: h.replace(/\s+/g, "_"),
-              alias: h,
+            const lines = text.split("\n").filter(line => line.trim() !== "");
+            const headers = lines[0].split(",");
+            const cols = headers.map(col => ({
+              id: col.trim().replace(/\W/g, "_"), // clean header names
               dataType: tableau.dataTypeEnum.string
             }));
-            schemaCallback([{
+
+            const schema = {
               id: "nvidia_full_data",
-              alias: "Nvidia Financial Statement Data",
+              alias: "Nvidia Full Financials",
               columns: cols
-            }]);
-          });
+            };
+
+            schemaCallback([schema]);
+          })
+          .catch(error => tableau.abortWithError("Schema fetch error: " + error));
       };
 
-      myConnector.getData = function (table, doneCallback) {
+      connector.getData = function (table, doneCallback) {
         fetch("https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv")
           .then(response => response.text())
           .then(text => {
-            const lines = text.split("\n").filter(Boolean);
-            const headers = lines[0].split(",").map(h => h.trim());
-            const rows = lines.slice(1).map(line => {
+            const lines = text.split("\n").filter(line => line.trim() !== "");
+            const headers = lines[0].split(",");
+            const data = lines.slice(1).map(line => {
               const values = line.split(",");
-              let rowObj = {};
-              headers.forEach((h, i) => {
-                rowObj[h.replace(/\s+/g, "_")] = values[i] || null;
+              const row = {};
+              headers.forEach((header, index) => {
+                row[header.trim().replace(/\W/g, "_")] = values[index]?.trim();
               });
-              return rowObj;
+              return row;
             });
-            table.appendRows(rows);
+
+            table.appendRows(data);
             doneCallback();
-          });
+          })
+          .catch(error => tableau.abortWithError("Data fetch error: " + error));
       };
 
-      tableau.registerConnector(myConnector);
+      tableau.registerConnector(connector);
 
-      document.getElementById("submitButton").addEventListener("click", function () {
-        tableau.connectionName = "Nvidia Financial Ratios";
+      window.onload = function () {
+        tableau.connectionName = "Nvidia Full Financials Data";
         tableau.submit();
-      });
-
-      tableau.init(function () {
-        // No auto-submit here; waits for button click
-      });
+      };
     })();
   </script>
 </body>
