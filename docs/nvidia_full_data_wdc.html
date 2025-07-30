@@ -6,13 +6,13 @@
 </head>
 <body>
   <h2>Click the button to load Nvidia Full Financials Data</h2>
-  <button id="loadButton">Load Data</button>
+  <button id="submitButton">Load Data</button>
 
   <script type="text/javascript">
-    (function () {
+    (function() {
       var myConnector = tableau.makeConnector();
 
-      myConnector.getSchema = function (schemaCallback) {
+      myConnector.getSchema = function(schemaCallback) {
         var cols = [
           { id: "date", dataType: tableau.dataTypeEnum.string },
           { id: "total_revenue", dataType: tableau.dataTypeEnum.float },
@@ -43,54 +43,40 @@
         ];
 
         var tableSchema = {
-          id: "nvidiaFullFinancials",
-          alias: "Nvidia Full Financials Data",
+          id: "nvidia_financials",
+          alias: "Nvidia Financials Full Dataset",
           columns: cols
         };
 
         schemaCallback([tableSchema]);
       };
 
-      myConnector.getData = function (table, doneCallback) {
-        var csvUrl = "https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv";
-
-        fetch(csvUrl)
+      myConnector.getData = function(table, doneCallback) {
+        fetch("https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv")
           .then(response => response.text())
           .then(text => {
             const lines = text.trim().split("\n");
             const headers = lines[0].split(",");
-            const data = [];
-
-            for (let i = 1; i < lines.length; i++) {
-              const row = lines[i].split(",");
-              const rowData = {};
-              headers.forEach((header, index) => {
-                rowData[header] = isNaN(row[index]) ? row[index] : parseFloat(row[index]);
+            const data = lines.slice(1).map(line => {
+              const values = line.split(",");
+              const row = {};
+              headers.forEach((h, i) => {
+                row[h] = isNaN(values[i]) ? values[i] : parseFloat(values[i]);
               });
-              data.push(rowData);
-            }
-
+              return row;
+            });
             table.appendRows(data);
-            doneCallback();
-          })
-          .catch(error => {
-            console.error("Fetch error:", error);
             doneCallback();
           });
       };
 
       tableau.registerConnector(myConnector);
 
-      document.getElementById("loadButton").addEventListener("click", function () {
-        tableau.connectionName = "Nvidia Full Financials Data";
+      document.getElementById("submitButton").addEventListener("click", function() {
+        tableau.connectionName = "Nvidia Financials";
         tableau.submit();
       });
     })();
-  </script>
-
-  <!-- This line is necessary for Tableau to detect this as a WDC -->
-  <script type="text/javascript">
-    window._tableauWDCSimple = true;
   </script>
 </body>
 </html>
