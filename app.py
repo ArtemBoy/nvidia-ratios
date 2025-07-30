@@ -65,16 +65,13 @@ def extract_ratios(urls):
         current_assets = get_value("AssetsCurrent")
         current_liabilities = get_value("LiabilitiesCurrent")
         total_liabilities = get_value("Liabilities")
-        shareholder_equity = get_value("StockholdersEquity")
-        total_assets = get_value("Assets")
 
-       row = {
-    "date": date,
-    "current_assets": current_assets if current_assets is not None else "",
-    "current_liabilities": current_liabilities if current_liabilities is not None else "",
-    "total_liabilities": total_liabilities if total_liabilities is not None else "",
-    }
-
+        row = {
+            "date": date,
+            "current_assets": current_assets if current_assets is not None else "",
+            "current_liabilities": current_liabilities if current_liabilities is not None else "",
+            "total_liabilities": total_liabilities if total_liabilities is not None else "",
+        }
 
         all_data.append(row)
 
