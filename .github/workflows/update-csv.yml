@@ -16,7 +16,7 @@ jobs:
         run: mkdir -p docs/data
 
       - name: Download latest CSV to docs/data/
-        run: curl -o docs/data/nvidia_ratios.csv https://nvidia-ratios.onrender.com/nvidia_full_data_csv
+        run: curl -o docs/data/nvidia_full_data.csv https://nvidia-ratios.onrender.com/nvidia_full_data_csv
 
       - name: Commit & Push CSV
         run: |
