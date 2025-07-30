@@ -54,7 +54,7 @@ def fetch_financial_data():
 def serve_full_csv():
     df = fetch_financial_data()
     output_file = "nvidia_full_data.csv"
-    df.to_csv(output_file, index=False)
+    df.to_csv("docs/data/nvidia_full_data.csv", index=False)
     return send_file(output_file, mimetype="text/csv", as_attachment=False)
 
 if __name__ == "__main__":
