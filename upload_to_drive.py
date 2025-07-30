@@ -26,9 +26,10 @@ def upload_csv_to_drive(csv_url, destination_filename):
 
     # Step 4: Prepare the file metadata
     file_metadata = {
-        "name": destination_filename,
-        "parents": [os.environ["DRIVE_FOLDER_ID"]]  # Folder must be shared with service account
-    }
+    'name': 'nvidia_ratios.csv',
+    'parents': ['1-8gz7x9fQwjLCdMBPorczwhPwcm_-vJx']  # <== This is your shared folder ID
+}
+
 
     # Step 5: Upload the file using an in-memory stream
     media = MediaIoBaseUpload(io.BytesIO(response.content), mimetype="text/csv")
