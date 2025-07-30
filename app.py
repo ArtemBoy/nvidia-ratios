@@ -130,10 +130,13 @@ def generate_and_save():
 # ---------------------------------------
 @app.route("/nvidia_full_data_csv")
 def serve_csv():
-    filepath = "docs/data/nvidia_full_data.csv"
-    if not os.path.exists(filepath):
-        return jsonify({"error": "CSV not found. Please generate it first."}), 404
-    return send_file(filepath, mimetype='text/csv')
+    try:
+        filepath = "docs/data/nvidia_full_data.csv"
+        if not os.path.exists(filepath):
+            return jsonify({"error": "CSV not found. Please generate it first."}), 404
+        return send_file(filepath, mimetype='text/csv')
+    except Exception as e:
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 # ---------------------------------------
 # Home test
