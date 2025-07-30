@@ -16,12 +16,12 @@ jobs:
         run: mkdir -p docs/data
 
       - name: Download latest CSV to docs/data/
-        run: curl -o docs/data/nvidia_ratios.csv https://nvidia-ratios.onrender.com/nvidia_ratios_csv
+        run: curl -o docs/data/nvidia_ratios.csv https://nvidia-ratios.onrender.com/nvidia_full_data_csv
 
       - name: Commit & Push CSV
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add docs/data/nvidia_ratios.csv
+          git add docs/data/nvidia_full_data.csv
           git commit -m "Auto-update CSV in docs [skip ci]" || echo "No changes to commit"
           git push
