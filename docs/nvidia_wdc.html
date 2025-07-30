@@ -5,7 +5,9 @@
   <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
 </head>
 <body>
-  <h2>Loading Nvidia Full Financials Data...</h2>
+  <h2>Click "Connect" to load Nvidia financial data</h2>
+  <button id="submitButton">Connect</button>
+
   <script>
     (function () {
       var myConnector = tableau.makeConnector();
@@ -50,8 +52,13 @@
 
       tableau.registerConnector(myConnector);
 
-      tableau.init(() => {
-        tableau.submit(); // ✅ Submits the connector properly
+      document.getElementById("submitButton").addEventListener("click", function () {
+        tableau.connectionName = "Nvidia Financial Ratios";
+        tableau.submit();
+      });
+
+      tableau.init(function () {
+        // No auto-submit here; waits for button click
       });
     })();
   </script>
