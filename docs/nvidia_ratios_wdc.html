@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NVIDIA Ratios WDC</title>
+  <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
+</head>
+<body>
+  <h2>Loading NVIDIA Ratios Data...</h2>
+
+  <script>
+    (function() {
+      var myConnector = tableau.makeConnector();
+
+      myConnector.getSchema = function(schemaCallback) {
+        fetch("https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/docs/data/nvidia_ratios.csv")
+          .then(res => res.text())
+          .then(csvText => {
+            const headers = csvText.split("\n")[0].split(",");
+            const cols = headers.map(h => ({
+              id: h.trim(),
+              dataType: tableau.dataTypeEnum.string
+            }));
+            const schema = {
+              id: "nvidiaRatios",
+              alias: "NVIDIA Ratios CSV",
+              columns: cols
+            };
+            schemaCallback([schema]);
+          });
+      };
+
+      myConnector.getData = function(table, doneCallback) {
+        fetch("https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/docs/data/nvidia_ratios.csv")
+          .then(res => res.text())
+          .then(csvText => {
+            const [headerLine, ...rows] = csvText.trim().split("\n");
+            const headers = headerLine.split(",");
+            const data = rows.map(row => {
+              const values = row.split(",");
+              let record = {};
+              headers.forEach((h, i) => record[h.trim()] = values[i]);
+              return record;
+            });
+            table.appendRows(data);
+            doneCallback();
+          });
+      };
+
+      tableau.registerConnector(myConnector);
+
+      tableau.connectionName = "NVIDIA Ratios Data";
+      tableau.submit();
+    })();
+  </script>
+</body>
+</html>
