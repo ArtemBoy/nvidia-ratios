@@ -5,7 +5,8 @@
   <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
 </head>
 <body>
-  <h2>Loading NVIDIA Ratios Data...</h2>
+  <h2>Click below to load NVIDIA Ratios Data into Tableau</h2>
+  <button id="submitButton">Load Data</button>
 
   <script>
     (function() {
@@ -48,8 +49,11 @@
 
       tableau.registerConnector(myConnector);
 
-      tableau.connectionName = "NVIDIA Ratios Data";
-      tableau.submit();
+      // Submit only on button click
+      document.getElementById("submitButton").addEventListener("click", function() {
+        tableau.connectionName = "NVIDIA Ratios Data";
+        tableau.submit();
+      });
     })();
   </script>
 </body>
