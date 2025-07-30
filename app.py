@@ -1,20 +1,41 @@
-from flask import Flask, Response
+from flask import Flask, jsonify
 import requests
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return '<h1>Nvidia Ratios Uploader is Running</h1>'
+CIK = "0001045810"  # NVIDIA
+headers = {"User-Agent": "Your Name your_email@example.com"}
 
-@app.route('/nvidia_ratios_csv')
-def get_csv():
+def fetch_concept(cik, concept):
+    url = f"https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{concept}.json"
+    response = requests.get(url, headers=headers)
+    return response.json() if response.status_code == 200 else None
+
+def get_latest_value(data):
+    if data and "units" in data and "USD" in data["units"]:
+        sorted_data = sorted(data["units"]["USD"], key=lambda x: x["end"], reverse=True)
+        return sorted_data[0]["val"]
+    return None
+
+@app.route("/nvidia_ratios", methods=["GET"])
+def get_ratios():
+    concepts = {
+        "Assets": "Total Assets",
+        "Liabilities": "Total Liabilities",
+        "StockholdersEquity": "Shareholders' Equity",
+        "Revenues": "Revenue",
+        "NetIncomeLoss": "Net Income"
+    }
+    values = {label: get_latest_value(fetch_concept(CIK, code)) for code, label in concepts.items()}
     try:
-        url = "https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/ratios.csv"
-        response = requests.get(url)
-        if response.status_code == 200:
-            return Response(response.content, mimetype='text/csv')
-        else:
-            return f"Error downloading CSV: status {response.status_code}"
-    except Exception as e:
-        return f"Exception occurred: {str(e)}"
+        ratios = {
+            "Debt-to-Equity": values["Total Liabilities"] / values["Shareholders' Equity"],
+            "Net Profit Margin": values["Net Income"] / values["Revenue"],
+            "Return on Assets": values["Net Income"] / values["Total Assets"]
+        }
+    except:
+        ratios = {"error": "Missing data"}
+    return jsonify(ratios)
+
+if __name__ == "__main__":
+    app.run()
