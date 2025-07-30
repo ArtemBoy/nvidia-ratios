@@ -1,59 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>NVIDIA Ratios WDC</title>
+  <title>Nvidia Full Financials WDC</title>
   <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
 </head>
 <body>
-  <h2>Click below to load NVIDIA Ratios Data into Tableau</h2>
-  <button id="submitButton">Load Data</button>
-
+  <h2>Loading Nvidia Full Financials Data...</h2>
   <script>
-    (function() {
+    (function () {
       var myConnector = tableau.makeConnector();
 
-      myConnector.getSchema = function(schemaCallback) {
-        fetch("https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/docs/data/nvidia_ratios.csv")
-          .then(res => res.text())
-          .then(csvText => {
-            const headers = csvText.split("\n")[0].split(",");
+      myConnector.getSchema = function (schemaCallback) {
+        fetch("https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv")
+          .then(response => response.text())
+          .then(text => {
+            const lines = text.split("\n").filter(Boolean);
+            const headers = lines[0].split(",").map(h => h.trim());
             const cols = headers.map(h => ({
-              id: h.trim(),
+              id: h.replace(/\s+/g, "_"),
+              alias: h,
               dataType: tableau.dataTypeEnum.string
             }));
-            const schema = {
-              id: "nvidiaRatios",
-              alias: "NVIDIA Ratios CSV",
+            schemaCallback([{
+              id: "nvidia_full_data",
+              alias: "Nvidia Financial Statement Data",
               columns: cols
-            };
-            schemaCallback([schema]);
+            }]);
           });
       };
 
-      myConnector.getData = function(table, doneCallback) {
-        fetch("https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/docs/data/nvidia_ratios.csv")
-          .then(res => res.text())
-          .then(csvText => {
-            const [headerLine, ...rows] = csvText.trim().split("\n");
-            const headers = headerLine.split(",");
-            const data = rows.map(row => {
-              const values = row.split(",");
-              let record = {};
-              headers.forEach((h, i) => record[h.trim()] = values[i]);
-              return record;
+      myConnector.getData = function (table, doneCallback) {
+        fetch("https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv")
+          .then(response => response.text())
+          .then(text => {
+            const lines = text.split("\n").filter(Boolean);
+            const headers = lines[0].split(",").map(h => h.trim());
+            const rows = lines.slice(1).map(line => {
+              const values = line.split(",");
+              let rowObj = {};
+              headers.forEach((h, i) => {
+                rowObj[h.replace(/\s+/g, "_")] = values[i];
+              });
+              return rowObj;
             });
-            table.appendRows(data);
+            table.appendRows(rows);
             doneCallback();
           });
       };
 
       tableau.registerConnector(myConnector);
-
-      // Submit only on button click
-      document.getElementById("submitButton").addEventListener("click", function() {
-        tableau.connectionName = "NVIDIA Ratios Data";
-        tableau.submit();
-      });
+      tableau.initCallback = () => tableau.submit();
     })();
   </script>
 </body>
