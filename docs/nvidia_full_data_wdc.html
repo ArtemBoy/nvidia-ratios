@@ -1,93 +1,96 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Nvidia Full Financials Data WDC</title>
-    <script src="https://connectors.tableau.com/libs/tableauwdc/2.3.0/tableauwdc.min.js"></script>
-  </head>
-  <body>
-    <h2>Click the button to load Nvidia Full Financials Data</h2>
-    <button id="loadButton">Load Data</button>
+<head>
+  <title>Nvidia Full Financials Data WDC</title>
+  <script src="https://connectors.tableau.com/libs/tableauwdc/2.3.0/tableauwdc.min.js"></script>
+</head>
+<body>
+  <h2>Click the button to load Nvidia Full Financials Data</h2>
+  <button id="loadButton">Load Data</button>
 
-    <script>
-      (function () {
-        const connector = tableau.makeConnector();
+  <script type="text/javascript">
+    (function () {
+      var myConnector = tableau.makeConnector();
 
-        connector.getSchema = function (schemaCallback) {
-          const cols = [
-            { id: "date", dataType: tableau.dataTypeEnum.string },
-            { id: "total_revenue", dataType: tableau.dataTypeEnum.float },
-            { id: "cost_of_revenue", dataType: tableau.dataTypeEnum.float },
-            { id: "gross_profit", dataType: tableau.dataTypeEnum.float },
-            { id: "operating_income", dataType: tableau.dataTypeEnum.float },
-            { id: "net_income", dataType: tableau.dataTypeEnum.float },
-            { id: "total_assets", dataType: tableau.dataTypeEnum.float },
-            { id: "total_liabilities", dataType: tableau.dataTypeEnum.float },
-            { id: "shareholder_equity", dataType: tableau.dataTypeEnum.float },
-            { id: "cash_and_cash_equivalents", dataType: tableau.dataTypeEnum.float },
-            { id: "short_term_investments", dataType: tableau.dataTypeEnum.float },
-            { id: "total_current_assets", dataType: tableau.dataTypeEnum.float },
-            { id: "total_current_liabilities", dataType: tableau.dataTypeEnum.float },
-            { id: "long_term_debt", dataType: tableau.dataTypeEnum.float },
-            { id: "net_cash_from_operating_activities", dataType: tableau.dataTypeEnum.float },
-            { id: "net_cash_used_for_investing_activities", dataType: tableau.dataTypeEnum.float },
-            { id: "net_cash_used_provided_by_financing_activities", dataType: tableau.dataTypeEnum.float },
-            { id: "capital_expenditures", dataType: tableau.dataTypeEnum.float },
-            { id: "free_cash_flow", dataType: tableau.dataTypeEnum.float },
-            { id: "dividends_paid", dataType: tableau.dataTypeEnum.float },
-            { id: "common_stock_issued", dataType: tableau.dataTypeEnum.float },
-            { id: "common_stock_repurchased", dataType: tableau.dataTypeEnum.float },
-            { id: "eps_basic", dataType: tableau.dataTypeEnum.float },
-            { id: "eps_diluted", dataType: tableau.dataTypeEnum.float },
-            { id: "weighted_average_shares_outstanding_basic", dataType: tableau.dataTypeEnum.float },
-            { id: "weighted_average_shares_outstanding_diluted", dataType: tableau.dataTypeEnum.float }
-          ];
+      myConnector.getSchema = function (schemaCallback) {
+        var cols = [
+          { id: "date", dataType: tableau.dataTypeEnum.string },
+          { id: "total_revenue", dataType: tableau.dataTypeEnum.float },
+          { id: "cost_of_revenue", dataType: tableau.dataTypeEnum.float },
+          { id: "gross_profit", dataType: tableau.dataTypeEnum.float },
+          { id: "operating_income", dataType: tableau.dataTypeEnum.float },
+          { id: "net_income", dataType: tableau.dataTypeEnum.float },
+          { id: "total_assets", dataType: tableau.dataTypeEnum.float },
+          { id: "total_liabilities", dataType: tableau.dataTypeEnum.float },
+          { id: "shareholder_equity", dataType: tableau.dataTypeEnum.float },
+          { id: "cash_and_cash_equivalents", dataType: tableau.dataTypeEnum.float },
+          { id: "short_term_investments", dataType: tableau.dataTypeEnum.float },
+          { id: "total_current_assets", dataType: tableau.dataTypeEnum.float },
+          { id: "total_current_liabilities", dataType: tableau.dataTypeEnum.float },
+          { id: "long_term_debt", dataType: tableau.dataTypeEnum.float },
+          { id: "net_cash_from_operating_activities", dataType: tableau.dataTypeEnum.float },
+          { id: "net_cash_used_for_investing_activities", dataType: tableau.dataTypeEnum.float },
+          { id: "net_cash_used_provided_by_financing_activities", dataType: tableau.dataTypeEnum.float },
+          { id: "capital_expenditures", dataType: tableau.dataTypeEnum.float },
+          { id: "free_cash_flow", dataType: tableau.dataTypeEnum.float },
+          { id: "dividends_paid", dataType: tableau.dataTypeEnum.float },
+          { id: "common_stock_issued", dataType: tableau.dataTypeEnum.float },
+          { id: "common_stock_repurchased", dataType: tableau.dataTypeEnum.float },
+          { id: "eps_basic", dataType: tableau.dataTypeEnum.float },
+          { id: "eps_diluted", dataType: tableau.dataTypeEnum.float },
+          { id: "weighted_average_shares_outstanding_basic", dataType: tableau.dataTypeEnum.float },
+          { id: "weighted_average_shares_outstanding_diluted", dataType: tableau.dataTypeEnum.float }
+        ];
 
-          const tableSchema = {
-            id: "nvidiaFullFinancials",
-            alias: "Nvidia Full Financials Data",
-            columns: cols
-          };
-
-          schemaCallback([tableSchema]);
+        var tableSchema = {
+          id: "nvidiaFullFinancials",
+          alias: "Nvidia Full Financials Data",
+          columns: cols
         };
 
-        connector.getData = function (table, doneCallback) {
-          const csvUrl = "https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv";
+        schemaCallback([tableSchema]);
+      };
 
-          fetch(csvUrl)
-            .then(response => response.text())
-            .then(text => {
-              const lines = text.trim().split("\n");
-              const headers = lines[0].split(",");
-              const data = [];
+      myConnector.getData = function (table, doneCallback) {
+        var csvUrl = "https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv";
 
-              for (let i = 1; i < lines.length; i++) {
-                const row = lines[i].split(",");
-                const rowData = {};
+        fetch(csvUrl)
+          .then(response => response.text())
+          .then(text => {
+            const lines = text.trim().split("\n");
+            const headers = lines[0].split(",");
+            const data = [];
 
-                headers.forEach((header, index) => {
-                  rowData[header] = isNaN(row[index]) ? row[index] : parseFloat(row[index]);
-                });
+            for (let i = 1; i < lines.length; i++) {
+              const row = lines[i].split(",");
+              const rowData = {};
+              headers.forEach((header, index) => {
+                rowData[header] = isNaN(row[index]) ? row[index] : parseFloat(row[index]);
+              });
+              data.push(rowData);
+            }
 
-                data.push(rowData);
-              }
+            table.appendRows(data);
+            doneCallback();
+          })
+          .catch(error => {
+            console.error("Fetch error:", error);
+            doneCallback();
+          });
+      };
 
-              table.appendRows(data);
-              doneCallback();
-            })
-            .catch(error => {
-              console.error("Error fetching or parsing CSV:", error);
-              doneCallback();
-            });
-        };
+      tableau.registerConnector(myConnector);
 
-        tableau.registerConnector(connector);
+      document.getElementById("loadButton").addEventListener("click", function () {
+        tableau.connectionName = "Nvidia Full Financials Data";
+        tableau.submit();
+      });
+    })();
+  </script>
 
-        document.getElementById("loadButton").addEventListener("click", function () {
-          tableau.connectionName = "Nvidia Full Financials Data";
-          tableau.submit();
-        });
-      })();
-    </script>
-  </body>
+  <!-- This line is necessary for Tableau to detect this as a WDC -->
+  <script type="text/javascript">
+    window._tableauWDCSimple = true;
+  </script>
+</body>
 </html>
