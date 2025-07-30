@@ -39,7 +39,7 @@
               const values = line.split(",");
               let rowObj = {};
               headers.forEach((h, i) => {
-                rowObj[h.replace(/\s+/g, "_")] = values[i];
+                rowObj[h.replace(/\s+/g, "_")] = values[i] || null;
               });
               return rowObj;
             });
@@ -49,7 +49,10 @@
       };
 
       tableau.registerConnector(myConnector);
-      tableau.initCallback = () => tableau.submit();
+
+      tableau.init(() => {
+        tableau.submit(); // ✅ Submits the connector properly
+      });
     })();
   </script>
 </body>
