@@ -6,14 +6,14 @@
 </head>
 <body>
   <h2>Click the button to load Nvidia Full Financials Data</h2>
-  <button id="submitButton">Load Data</button>
+  <button id="loadButton">Load Data</button>
 
-  <script type="text/javascript">
+  <script>
     (function() {
       var myConnector = tableau.makeConnector();
 
       myConnector.getSchema = function(schemaCallback) {
-        var cols = [
+        const cols = [
           { id: "date", dataType: tableau.dataTypeEnum.string },
           { id: "total_revenue", dataType: tableau.dataTypeEnum.float },
           { id: "cost_of_revenue", dataType: tableau.dataTypeEnum.float },
@@ -42,13 +42,11 @@
           { id: "weighted_average_shares_outstanding_diluted", dataType: tableau.dataTypeEnum.float }
         ];
 
-        var tableSchema = {
+        schemaCallback([{
           id: "nvidia_financials",
-          alias: "Nvidia Financials Full Dataset",
+          alias: "Nvidia Full Financials Data",
           columns: cols
-        };
-
-        schemaCallback([tableSchema]);
+        }]);
       };
 
       myConnector.getData = function(table, doneCallback) {
@@ -61,19 +59,20 @@
               const values = line.split(",");
               const row = {};
               headers.forEach((h, i) => {
-                row[h] = isNaN(values[i]) ? values[i] : parseFloat(values[i]);
+                row[h.trim()] = isNaN(values[i]) ? values[i] : parseFloat(values[i]);
               });
               return row;
             });
             table.appendRows(data);
             doneCallback();
-          });
+          })
+          .catch(error => console.error("Error fetching CSV:", error));
       };
 
       tableau.registerConnector(myConnector);
 
-      document.getElementById("submitButton").addEventListener("click", function() {
-        tableau.connectionName = "Nvidia Financials";
+      document.getElementById("loadButton").addEventListener("click", () => {
+        tableau.connectionName = "Nvidia Financials Dataset";
         tableau.submit();
       });
     })();
