@@ -46,7 +46,9 @@ def extract_ratios(urls):
         xbrl_url = f"{base_url}/{xbrl_file}"
         filing = requests.get(xbrl_url, headers=HEADERS).json()
         facts = filing.get("report", {}).get("facts", {})
-        date = filing.get("report", {}).get("periodEndDate", "")
+
+        # Fix: Use fallback for missing date
+        date = filing.get("report", {}).get("periodEndDate") or "unknown"
 
         def get_value(tag):
             value = facts.get(tag, {}).get("value")
@@ -59,6 +61,8 @@ def extract_ratios(urls):
         current_assets = get_value("AssetsCurrent")
         current_liabilities = get_value("LiabilitiesCurrent")
         total_liabilities = get_value("Liabilities")
+        shareholder_equity = get_value("StockholdersEquity")
+        total_assets = get_value("Assets")
 
         row = {
             "date": date,
@@ -66,6 +70,8 @@ def extract_ratios(urls):
             "current_liabilities": current_liabilities if current_liabilities is not None else "",
             "total_liabilities": total_liabilities if total_liabilities is not None else "",
         }
+
+        print("✅ Row added:", row)  # Optional debug output
 
         all_data.append(row)
 
