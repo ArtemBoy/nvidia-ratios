@@ -8,9 +8,6 @@ app = Flask(__name__)
 CIK = "0001045810"  # Nvidia's CIK
 HEADERS = {"User-Agent": "nvidia-financials-script"}
 
-# ---------------------------------------
-# Function: Get most recent 10-K filings
-# ---------------------------------------
 def get_10k_urls(cik, count=4):
     index_url = f"https://data.sec.gov/submissions/CIK{cik.zfill(10)}.json"
     res = requests.get(index_url, headers=HEADERS)
@@ -31,9 +28,6 @@ def get_10k_urls(cik, count=4):
 
     return urls
 
-# ---------------------------------------
-# Function: Extract simple financial ratios
-# ---------------------------------------
 def extract_ratios(urls):
     all_data = []
 
@@ -77,9 +71,6 @@ def extract_ratios(urls):
 
     return all_data
 
-# ---------------------------------------
-# Save ratios CSV
-# ---------------------------------------
 def save_csv(data, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, mode="w", newline="", encoding="utf-8") as f:
@@ -87,33 +78,23 @@ def save_csv(data, path):
         writer.writeheader()
         writer.writerows(data)
 
-# ---------------------------------------
-# Route: Generate CSV (manual trigger)
-# ---------------------------------------
 @app.route("/generate_ratios")
 def generate_ratios_csv():
     urls = get_10k_urls(CIK)
     data = extract_ratios(urls)
-    save_csv(data, "docs/data/nvidia_full_data.csv")
+    save_csv(data, "docs/data/nvidia_ratios.csv")
     return jsonify({"status": "ok", "rows": len(data)})
 
-# ---------------------------------------
-# Route: Serve CSV file
-# ---------------------------------------
 @app.route("/nvidia_ratios_csv")
 def serve_csv():
-    path = "docs/data/nvidia_full_data.csv"
+    path = "docs/data/nvidia_ratios.csv"
     if not os.path.exists(path):
         return jsonify({"error": "CSV not found"}), 404
     return send_file(path, mimetype="text/csv")
 
-# ---------------------------------------
-# Home route
-# ---------------------------------------
 @app.route("/")
 def home():
     return "✅ Nvidia Ratios API is live."
 
-# ---------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
