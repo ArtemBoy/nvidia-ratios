@@ -1,78 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Nvidia Full Financials Data WDC</title>
-  <script src="https://connectors.tableau.com/libs/tableauwdc/2.3.0/tableauwdc.min.js"></script>
+  <title>NVIDIA Ratios WDC</title>
+  <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
 </head>
 <body>
-  <h2>Click the button to load Nvidia Full Financials Data</h2>
-  <button id="loadButton">Load Data</button>
+  <h2>Click below to load NVIDIA Ratios Data into Tableau</h2>
+  <button id="submitButton">Load Data</button>
 
   <script>
     (function() {
       var myConnector = tableau.makeConnector();
 
       myConnector.getSchema = function(schemaCallback) {
-        const cols = [
-          { id: "date", dataType: tableau.dataTypeEnum.string },
-          { id: "total_revenue", dataType: tableau.dataTypeEnum.float },
-          { id: "cost_of_revenue", dataType: tableau.dataTypeEnum.float },
-          { id: "gross_profit", dataType: tableau.dataTypeEnum.float },
-          { id: "operating_income", dataType: tableau.dataTypeEnum.float },
-          { id: "net_income", dataType: tableau.dataTypeEnum.float },
-          { id: "total_assets", dataType: tableau.dataTypeEnum.float },
-          { id: "total_liabilities", dataType: tableau.dataTypeEnum.float },
-          { id: "shareholder_equity", dataType: tableau.dataTypeEnum.float },
-          { id: "cash_and_cash_equivalents", dataType: tableau.dataTypeEnum.float },
-          { id: "short_term_investments", dataType: tableau.dataTypeEnum.float },
-          { id: "total_current_assets", dataType: tableau.dataTypeEnum.float },
-          { id: "total_current_liabilities", dataType: tableau.dataTypeEnum.float },
-          { id: "long_term_debt", dataType: tableau.dataTypeEnum.float },
-          { id: "net_cash_from_operating_activities", dataType: tableau.dataTypeEnum.float },
-          { id: "net_cash_used_for_investing_activities", dataType: tableau.dataTypeEnum.float },
-          { id: "net_cash_used_provided_by_financing_activities", dataType: tableau.dataTypeEnum.float },
-          { id: "capital_expenditures", dataType: tableau.dataTypeEnum.float },
-          { id: "free_cash_flow", dataType: tableau.dataTypeEnum.float },
-          { id: "dividends_paid", dataType: tableau.dataTypeEnum.float },
-          { id: "common_stock_issued", dataType: tableau.dataTypeEnum.float },
-          { id: "common_stock_repurchased", dataType: tableau.dataTypeEnum.float },
-          { id: "eps_basic", dataType: tableau.dataTypeEnum.float },
-          { id: "eps_diluted", dataType: tableau.dataTypeEnum.float },
-          { id: "weighted_average_shares_outstanding_basic", dataType: tableau.dataTypeEnum.float },
-          { id: "weighted_average_shares_outstanding_diluted", dataType: tableau.dataTypeEnum.float }
-        ];
-
-        schemaCallback([{
-          id: "nvidia_financials",
-          alias: "Nvidia Full Financials Data",
-          columns: cols
-        }]);
+        fetch("https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/docs/data/nvidia_ratios.csv")
+          .then(res => res.text())
+          .then(csvText => {
+            const headers = csvText.split("\n")[0].split(",");
+            const cols = headers.map(h => ({
+              id: h.trim(),
+              dataType: tableau.dataTypeEnum.string
+            }));
+            const schema = {
+              id: "nvidiaRatios",
+              alias: "NVIDIA Ratios CSV",
+              columns: cols
+            };
+            schemaCallback([schema]);
+          });
       };
 
       myConnector.getData = function(table, doneCallback) {
-        fetch("https://artemboy.github.io/nvidia-ratios/data/nvidia_full_data.csv")
-          .then(response => response.text())
-          .then(text => {
-            const lines = text.trim().split("\n");
-            const headers = lines[0].split(",");
-            const data = lines.slice(1).map(line => {
-              const values = line.split(",");
-              const row = {};
-              headers.forEach((h, i) => {
-                row[h.trim()] = isNaN(values[i]) ? values[i] : parseFloat(values[i]);
-              });
-              return row;
+        fetch("https://raw.githubusercontent.com/ArtemBoy/nvidia-ratios/main/docs/data/nvidia_ratios.csv")
+          .then(res => res.text())
+          .then(csvText => {
+            const [headerLine, ...rows] = csvText.trim().split("\n");
+            const headers = headerLine.split(",");
+            const data = rows.map(row => {
+              const values = row.split(",");
+              let record = {};
+              headers.forEach((h, i) => record[h.trim()] = values[i]);
+              return record;
             });
             table.appendRows(data);
             doneCallback();
-          })
-          .catch(error => console.error("Error fetching CSV:", error));
+          });
       };
 
       tableau.registerConnector(myConnector);
 
-      document.getElementById("loadButton").addEventListener("click", () => {
-        tableau.connectionName = "Nvidia Financials Dataset";
+      // Submit only on button click
+      document.getElementById("submitButton").addEventListener("click", function() {
+        tableau.connectionName = "NVIDIA Ratios Data";
         tableau.submit();
       });
     })();
