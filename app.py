@@ -81,7 +81,7 @@ def save_csv(data, path):
         writer.writeheader()
         writer.writerows(data)
 
-@app.before_first_request
+@app.got_first_request
 def cleanup_old_csv():
     try:
         os.remove("docs/data/nvidia_ratios.csv")
