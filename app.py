@@ -1,3 +1,4 @@
+
 import os
 import requests
 from flask import Flask, send_file, jsonify
@@ -47,7 +48,6 @@ def extract_ratios(urls):
         filing = requests.get(xbrl_url, headers=HEADERS).json()
         facts = filing.get("report", {}).get("facts", {})
 
-        # Fix: Use fallback for missing date
         date = filing.get("report", {}).get("periodEndDate") or "unknown"
 
         def get_value(tag):
@@ -61,8 +61,6 @@ def extract_ratios(urls):
         current_assets = get_value("AssetsCurrent")
         current_liabilities = get_value("LiabilitiesCurrent")
         total_liabilities = get_value("Liabilities")
-        shareholder_equity = get_value("StockholdersEquity")
-        total_assets = get_value("Assets")
 
         row = {
             "date": date,
@@ -71,8 +69,7 @@ def extract_ratios(urls):
             "total_liabilities": total_liabilities if total_liabilities is not None else "",
         }
 
-        print("✅ Row added:", row)  # Optional debug output
-
+        print("✅ Row added:", row)
         all_data.append(row)
 
     return all_data
@@ -84,23 +81,31 @@ def save_csv(data, path):
         writer.writeheader()
         writer.writerows(data)
 
+@app.before_first_request
+def cleanup_old_csv():
+    try:
+        os.remove("docs/data/nvidia_ratios.csv")
+        print("🧹 Old nvidia_ratios.csv deleted")
+    except FileNotFoundError:
+        pass
+
 @app.route("/generate_ratios")
 def generate_ratios_csv():
     urls = get_10k_urls(CIK)
     data = extract_ratios(urls)
-    save_csv(data, "docs/data/nvidia_ratios.csv")
+    save_csv(data, "docs/data/nvidia_financials_raw.csv")
     return jsonify({"status": "ok", "rows": len(data)})
 
-@app.route("/nvidia_ratios_csv")
+@app.route("/nvidia_raw_csv")
 def serve_csv():
-    path = "docs/data/nvidia_ratios.csv"
+    path = "docs/data/nvidia_financials_raw.csv"
     if not os.path.exists(path):
         return jsonify({"error": "CSV not found"}), 404
     return send_file(path, mimetype="text/csv")
 
 @app.route("/")
 def home():
-    return "✅ Nvidia Ratios API is live — version 0.3.1"
+    return "✅ Nvidia Financial Extractor is live — raw version 0.3.2"
 
 if __name__ == "__main__":
     app.run(debug=True)
