@@ -100,7 +100,7 @@ def download_csv():
     if values.get("Net Income") and values.get("Total Assets"):
         rows.append(("Return on Assets", values["Net Income"] / values["Total Assets"]))
     if values.get("Net Income") and values.get("Total Assets"):
-        ratios["Test"] = values["Net Income"] - values["Total Assets"]
+        rows.append(("Test", values["Net Income"] - values["Total Assets"]))
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["metric", "value"])
