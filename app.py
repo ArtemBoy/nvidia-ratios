@@ -41,7 +41,8 @@ def get_ratios():
         ratios["Net Profit Margin"] = values["Net Income"] / values["Revenue"]
     if values.get("Net Income") and values.get("Total Assets"):
         ratios["Return on Assets"] = values["Net Income"] / values["Total Assets"]
-
+    if values.get("Net Income") and values.get("Total Assets"):
+        ratios["Test"] = values["Net Income"] - values["Total Assets"]
     if not ratios:
         return jsonify({"error": "Missing data"})
 
@@ -98,7 +99,8 @@ def download_csv():
         rows.append(("Net Profit Margin", values["Net Income"] / values["Revenue"]))
     if values.get("Net Income") and values.get("Total Assets"):
         rows.append(("Return on Assets", values["Net Income"] / values["Total Assets"]))
-
+    if values.get("Net Income") and values.get("Total Assets"):
+        ratios["Test"] = values["Net Income"] - values["Total Assets"]
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["metric", "value"])
