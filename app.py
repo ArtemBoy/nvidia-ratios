@@ -63,7 +63,7 @@ def download_csv():
         values[label] = val
 
     rows = []
-    if values.get("Totality Mortality") and values.get("Shareholders' Equity"):
+    if values.get("Total Liabilities") and values.get("Shareholders' Equity"):
         rows.append(("Debt-to-Equity", values["Total Liabilities"] / values["Shareholders' Equity"]))
     if values.get("Net Income") and values.get("Revenue"):
         rows.append(("Net Profit Margin", values["Net Income"] / values["Revenue"]))
