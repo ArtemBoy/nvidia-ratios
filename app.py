@@ -79,11 +79,15 @@ def save_csv(data, path):
         writer.writerows(data)
 
 @app.route("/generate_ratios")
-def generate_ratios_csv():
-    urls = get_10k_urls(CIK)
-    data = extract_ratios(urls)
-    save_csv(data, "docs/data/nvidia_ratios.csv")
-    return jsonify({"status": "ok", "rows": len(data)})
+def generate_ratios():
+    try:
+        # Replace with your data gathering code
+        data = get_nvidia_data()  # or whatever function you use
+        save_csv(data, "docs/data/nvidia_ratios.csv")
+        return jsonify({"status": "CSV generated"})
+    except Exception as e:
+        print("Error in /generate_ratios:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/nvidia_ratios_csv")
 def serve_csv():
