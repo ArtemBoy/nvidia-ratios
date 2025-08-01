@@ -1,100 +1,69 @@
-import os
 import requests
-from flask import Flask, send_file, jsonify
-import csv
+import pandas as pd
 
-app = Flask(__name__)
+# Configuration
+CIK = "0001045810"  # CIK for NVIDIA
+headers = {
+    "User-Agent": "Your Name your_email@example.com"
+}
 
-CIK = "0001045810"  # Nvidia's CIK
-HEADERS = {"User-Agent": "nvidia-financials-script"}
+def fetch_concept(cik, concept):
+    url = f"https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{concept}.json"
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Failed to fetch {concept}")
+        return None
 
-def get_10k_urls(cik, count=4):
-    index_url = f"https://data.sec.gov/submissions/CIK{cik.zfill(10)}.json"
-    res = requests.get(index_url, headers=HEADERS)
-    if res.status_code != 200:
-        return []
+def get_latest_value(data):
+    if data and "units" in data and "USD" in data["units"]:
+        # Sort by date
+        sorted_data = sorted(data["units"]["USD"], key=lambda x: x["end"], reverse=True)
+        return sorted_data[0]["val"]
+    return None
 
-    data = res.json()
-    filings = data.get("filings", {}).get("recent", {})
-    urls = []
+# Financial concepts to fetch
+concepts = {
+    "Assets": "Total Assets",
+    "Liabilities": "Total Liabilities",
+    "StockholdersEquity": "Shareholders' Equity",
+    "Revenues": "Revenue",
+    "NetIncomeLoss": "Net Income"
+}
 
-    for i, form_type in enumerate(filings.get("form", [])):
-        if form_type == "10-K":
-            accession = filings["accessionNumber"][i].replace("-", "")
-            doc_url = f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/index.json"
-            urls.append(doc_url)
-            if len(urls) == count:
-                break
+values = {}
 
-    return urls
+print("📥 Fetching data for NVIDIA...")
 
-def extract_ratios(urls):
-    all_data = []
+for concept_code, label in concepts.items():
+    data = fetch_concept(CIK, concept_code)
+    val = get_latest_value(data)
+    values[label] = val
 
-    for url in urls:
-        res = requests.get(url, headers=HEADERS)
-        if res.status_code != 200:
-            continue
+# Display raw values
+df = pd.DataFrame(values.items(), columns=["Metric", "Value"])
+print("\n📊 Latest Financials (in USD):\n")
+print(df)
 
-        base_url = url.replace("/index.json", "")
-        json_data = res.json()
-        files = json_data.get("directory", {}).get("item", [])
-        xbrl_file = next((f["name"] for f in files if f["name"].endswith("_htm.json")), None)
-        if not xbrl_file:
-            continue
+# Calculate ratios
+print("\n📐 Calculating Ratios...\n")
 
-        xbrl_url = f"{base_url}/{xbrl_file}"
-        filing = requests.get(xbrl_url, headers=HEADERS).json()
-        facts = filing.get("report", {}).get("facts", {})
-        date = filing.get("report", {}).get("periodEndDate", "")
+try:
+    equity = values["Shareholders' Equity"]
+    liabilities = values["Total Liabilities"]
+    assets = values["Total Assets"]
+    revenue = values["Revenue"]
+    net_income = values["Net Income"]
 
-        def get_value(tag):
-            value = facts.get(tag, {}).get("value")
-            if isinstance(value, list):
-                return float(value[0])
-            if value is not None:
-                return float(value)
-            return None
+    ratios = {
+        "Debt-to-Equity": liabilities / equity if equity else None,
+        "Net Profit Margin": net_income / revenue if revenue else None,
+        "Return on Assets (ROA)": net_income / assets if assets else None
+    }
 
-        current_assets = get_value("AssetsCurrent")
-        current_liabilities = get_value("LiabilitiesCurrent")
-        total_liabilities = get_value("Liabilities")
+    ratio_df = pd.DataFrame(ratios.items(), columns=["Ratio", "Value"])
+    print(ratio_df)
 
-        row = {
-            "date": date,
-            "current_assets": current_assets if current_assets is not None else "",
-            "current_liabilities": current_liabilities if current_liabilities is not None else "",
-            "total_liabilities": total_liabilities if total_liabilities is not None else "",
-        }
-
-        all_data.append(row)
-
-    return all_data
-
-def save_csv(data, path):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, mode="w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=data[0].keys())
-        writer.writeheader()
-        writer.writerows(data)
-
-@app.route("/generate_ratios")
-def generate_ratios_csv():
-    urls = get_10k_urls(CIK)
-    data = extract_ratios(urls)
-    save_csv(data, "docs/data/nvidia_ratios.csv")
-    return jsonify({"status": "ok", "rows": len(data)})
-
-@app.route("/nvidia_ratios_csv")
-def serve_csv():
-    path = "docs/data/nvidia_ratios.csv"
-    if not os.path.exists(path):
-        return jsonify({"error": "CSV not found"}), 404
-    return send_file(path, mimetype="text/csv")
-
-@app.route("/")
-def home():
-    return "✅ Nvidia Ratios API is live."
-
-if __name__ == "__main__":
-    app.run(debug=True)
+except Exception as e:
+    print("Error calculating ratios:", e)
