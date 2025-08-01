@@ -1,4 +1,3 @@
-
 import os
 import requests
 from flask import Flask, send_file, jsonify
@@ -47,8 +46,7 @@ def extract_ratios(urls):
         xbrl_url = f"{base_url}/{xbrl_file}"
         filing = requests.get(xbrl_url, headers=HEADERS).json()
         facts = filing.get("report", {}).get("facts", {})
-
-        date = filing.get("report", {}).get("periodEndDate") or "unknown"
+        date = filing.get("report", {}).get("periodEndDate", "")
 
         def get_value(tag):
             value = facts.get(tag, {}).get("value")
@@ -69,7 +67,6 @@ def extract_ratios(urls):
             "total_liabilities": total_liabilities if total_liabilities is not None else "",
         }
 
-        print("✅ Row added:", row)
         all_data.append(row)
 
     return all_data
@@ -81,31 +78,23 @@ def save_csv(data, path):
         writer.writeheader()
         writer.writerows(data)
 
-@app.got_first_request
-def cleanup_old_csv():
-    try:
-        os.remove("docs/data/nvidia_ratios.csv")
-        print("🧹 Old nvidia_ratios.csv deleted")
-    except FileNotFoundError:
-        pass
-
 @app.route("/generate_ratios")
 def generate_ratios_csv():
     urls = get_10k_urls(CIK)
     data = extract_ratios(urls)
-    save_csv(data, "docs/data/nvidia_financials_raw.csv")
+    save_csv(data, "docs/data/nvidia_ratios.csv")
     return jsonify({"status": "ok", "rows": len(data)})
 
-@app.route("/nvidia_raw_csv")
+@app.route("/nvidia_ratios_csv")
 def serve_csv():
-    path = "docs/data/nvidia_financials_raw.csv"
+    path = "docs/data/nvidia_ratios.csv"
     if not os.path.exists(path):
         return jsonify({"error": "CSV not found"}), 404
     return send_file(path, mimetype="text/csv")
 
 @app.route("/")
 def home():
-    return "✅ Nvidia Financial Extractor is live — raw version 0.3.2"
+    return "✅ Nvidia Ratios API is live."
 
 if __name__ == "__main__":
     app.run(debug=True)
