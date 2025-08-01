@@ -100,7 +100,7 @@ def serve_csv():
 
 @app.route("/")
 def home():
-    return "✅ Nvidia Ratios API is live."
+    return "✅ Nvidia Ratios API is live — version 0.3.1"
 
 if __name__ == "__main__":
     app.run(debug=True)
