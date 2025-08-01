@@ -1,104 +1,83 @@
+
+from flask import Flask, jsonify, send_file, render_template
+import pandas as pd
 import os
-import requests
-from flask import Flask, send_file, jsonify
-import csv
 
 app = Flask(__name__)
 
-CIK = "0001045810"  # Nvidia's CIK
-HEADERS = {"User-Agent": "nvidia-financials-script"}
+# Version info
+APP_VERSION = "0.3.1"
 
-def get_10k_urls(cik, count=4):
-    index_url = f"https://data.sec.gov/submissions/CIK{cik.zfill(10)}.json"
-    res = requests.get(index_url, headers=HEADERS)
-    if res.status_code != 200:
-        return []
+# Path to save the ratios CSV
+CSV_PATH = "docs/data/nvidia_ratios.csv"
 
-    data = res.json()
-    filings = data.get("filings", {}).get("recent", {})
-    urls = []
+# Dummy balance sheet and income statement for example
+balance_sheet = {
+    'Total Assets': 80000,
+    'Total Liabilities': 40000,
+    'Total Shareholder Equity': 40000
+}
 
-    for i, form_type in enumerate(filings.get("form", [])):
-        if form_type == "10-K":
-            accession = filings["accessionNumber"][i].replace("-", "")
-            doc_url = f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/index.json"
-            urls.append(doc_url)
-            if len(urls) == count:
-                break
+income_statement = {
+    'Net Income': 20000,
+    'Revenue': 47000
+}
 
-    return urls
 
-def extract_ratios(urls):
-    all_data = []
+def extract_ratios():
+    ratios = {}
 
-    for url in urls:
-        res = requests.get(url, headers=HEADERS)
-        if res.status_code != 200:
-            continue
+    # Debt-to-Equity Ratio
+    equity = balance_sheet.get('Total Shareholder Equity', 0)
+    debt = balance_sheet.get('Total Liabilities', 0)
+    ratios["Debt-to-Equity"] = debt / equity if equity else None
 
-        base_url = url.replace("/index.json", "")
-        json_data = res.json()
-        files = json_data.get("directory", {}).get("item", [])
-        xbrl_file = next((f["name"] for f in files if f["name"].endswith("_htm.json")), None)
-        if not xbrl_file:
-            continue
+    # Net Profit Margin
+    revenue = income_statement.get('Revenue', 0)
+    net_income = income_statement.get('Net Income', 0)
+    ratios["Net Profit Margin"] = net_income / revenue if revenue else None
 
-        xbrl_url = f"{base_url}/{xbrl_file}"
-        filing = requests.get(xbrl_url, headers=HEADERS).json()
-        facts = filing.get("report", {}).get("facts", {})
-        date = filing.get("report", {}).get("periodEndDate", "")
+    # Return on Assets (ROA)
+    assets = balance_sheet.get('Total Assets', 0)
+    ratios["Return on Assets"] = net_income / assets if assets else None
 
-        def get_value(tag):
-            value = facts.get(tag, {}).get("value")
-            if isinstance(value, list):
-                return float(value[0])
-            if value is not None:
-                return float(value)
-            return None
+    return ratios
 
-        current_assets = get_value("AssetsCurrent")
-        current_liabilities = get_value("LiabilitiesCurrent")
-        total_liabilities = get_value("Liabilities")
 
-        row = {
-            "date": date,
-            "current_assets": current_assets if current_assets is not None else "",
-            "current_liabilities": current_liabilities if current_liabilities is not None else "",
-            "total_liabilities": total_liabilities if total_liabilities is not None else "",
-        }
+def save_csv(data_dict, filename):
+    df = pd.DataFrame(list(data_dict.items()), columns=["metric", "value"])
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    df.to_csv(filename, index=False)
 
-        all_data.append(row)
 
-    return all_data
+@app.route("/")
+def index():
+    return f"✅ Nvidia Ratios API is live — version {APP_VERSION}"
 
-def save_csv(data, path):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, mode="w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=data[0].keys())
-        writer.writeheader()
-        writer.writerows(data)
 
 @app.route("/generate_ratios")
 def generate_ratios():
     try:
-        # Replace with your data gathering code
-        data = get_nvidia_data()  # or whatever function you use
+        data = extract_ratios()  # ✅ This is the correct function
         save_csv(data, "docs/data/nvidia_ratios.csv")
         return jsonify({"status": "CSV generated"})
     except Exception as e:
         print("Error in /generate_ratios:", str(e))
         return jsonify({"error": str(e)}), 500
 
-@app.route("/nvidia_ratios_csv")
-def serve_csv():
-    path = "docs/data/nvidia_ratios.csv"
-    if not os.path.exists(path):
-        return jsonify({"error": "CSV not found"}), 404
-    return send_file(path, mimetype="text/csv")
 
-@app.route("/")
-def home():
-    return "✅ Nvidia Ratios API is live."
+@app.route("/nvidia_ratios_csv")
+def nvidia_ratios_csv():
+    try:
+        return send_file(CSV_PATH, as_attachment=False)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/nvidia_ratios_wdc")
+def nvidia_ratios_wdc():
+    return render_template("nvidia_ratios_wdc.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
