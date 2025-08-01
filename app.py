@@ -50,12 +50,41 @@ def get_ratios():
 @app.route("/nvidia_ratios_csv", methods=["GET"])
 def download_csv():
     concepts = {
-        "Assets": "Total Assets",
-        "Liabilities": "Total Liabilities",
-        "StockholdersEquity": "Shareholders' Equity",
-        "Revenues": "Revenue",
-        "NetIncomeLoss": "Net Income"
+    # --- Balance Sheet ---
+    "Assets": "Total Assets",
+    "AssetsCurrent": "Current Assets",
+    "Liabilities": "Total Liabilities",
+    "LiabilitiesCurrent": "Current Liabilities",
+    "StockholdersEquity": "Shareholders' Equity",
+    "CashAndCashEquivalentsAtCarryingValue": "Cash",
+    "InventoryNet": "Inventory",
+
+    # --- Income Statement ---
+    "Revenues": "Revenue",
+    "CostOfRevenue": "Cost of Goods Sold",
+    "GrossProfit": "Gross Profit",
+    "OperatingIncomeLoss": "Operating Income",
+    "NetIncomeLoss": "Net Income",
+    "InterestExpense": "Interest Expense",
+
+    # --- Cash Flow ---
+    "NetCashProvidedByUsedInOperatingActivities": "Operating Cash Flow",
+    "CapitalExpenditures": "CapEx",
+    "DepreciationDepletionAndAmortization": "Depreciation & Amortization",
+
+    # --- Share Data ---
+    "EarningsPerShareBasic": "EPS (Basic)",
+    "EarningsPerShareDiluted": "EPS (Diluted)",
+    "CommonStockSharesOutstanding": "Shares Outstanding",
+
+    # --- Optional Additions for Efficiency and Taxes ---
+    "AccountsReceivableNet": "Accounts Receivable",
+    "AccountsPayableCurrent": "Accounts Payable",
+    "ResearchAndDevelopmentExpense": "R&D Expense",
+    "SellingGeneralAndAdministrativeExpense": "SG&A Expense",
+    "IncomeTaxExpenseBenefit": "Income Tax Expense"
     }
+
 
     values = {}
     for code, label in concepts.items():
